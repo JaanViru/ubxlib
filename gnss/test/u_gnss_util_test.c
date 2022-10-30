@@ -130,7 +130,7 @@ U_PORT_TEST_FUNCTION("[gnssUtil]", "gnssUtilTransparent")
     heapUsed = uPortGetHeapFree();
 
     iterations = uGnssTestPrivateTransportTypesSet(transportTypes, U_CFG_APP_GNSS_UART,
-                                                   U_CFG_APP_GNSS_I2C);
+                                                   U_CFG_APP_GNSS_I2C, U_CFG_APP_GNSS_SPI);
     for (size_t w = 0; w < iterations; w++) {
         // Can't do this when the NMEA stream is active, just too messy
         if ((transportTypes[w] != U_GNSS_TRANSPORT_NMEA_UART) &&
@@ -169,7 +169,11 @@ U_PORT_TEST_FUNCTION("[gnssUtil]", "gnssUtilTransparent")
                                                    pBuffer2,
                                                    U_GNSS_UTIL_TEST_VERSION_SIZE_MAX_BYTES);
             U_TEST_PRINT_LINE("%d byte(s) returned.", x);
-            U_PORT_TEST_ASSERT(x == y + U_UBX_PROTOCOL_OVERHEAD_LENGTH_BYTES);
+            if (transportTypes[w] != U_GNSS_TRANSPORT_SPI) {
+                // Can't do this check on SPI as there will be fill bytes on the
+                // end of the raw data
+                U_PORT_TEST_ASSERT(x == y + U_UBX_PROTOCOL_OVERHEAD_LENGTH_BYTES);
+            }
             for (z = x + 1; x < U_GNSS_UTIL_TEST_VERSION_SIZE_MAX_BYTES; x++) {
                 U_PORT_TEST_ASSERT(*(pBuffer2 + z) == 0x66);
             }

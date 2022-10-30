@@ -2567,7 +2567,8 @@ U_PORT_TEST_FUNCTION("[port]", "portI2cRequiresSpecificWiring")
  */
 U_PORT_TEST_FUNCTION("[port]", "portSpiRequiresSpecificWiring")
 {
-    uCommonSpiControllerDevice_t device = U_COMMON_SPI_CONTROLLER_DEVICE_DEFAULTS(U_CFG_APP_PIN_GNSS_SPI_SELECT);
+    uCommonSpiControllerDevice_t device = U_COMMON_SPI_CONTROLLER_DEVICE_DEFAULTS(
+                                              U_CFG_APP_PIN_GNSS_SPI_SELECT); // *NOPAD*
     uCommonSpiControllerDevice_t tmp = {0};
     int32_t y = 0;
     int32_t messageClass = -1;
