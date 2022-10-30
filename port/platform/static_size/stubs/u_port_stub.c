@@ -509,6 +509,67 @@ int32_t uPortI2cControllerSend(int32_t handle, uint16_t address,
     return 0;
 }
 
+// From u_port_spih
+int32_t uPortSpiInit()
+{
+    return (int32_t) U_ERROR_COMMON_NOT_SUPPORTED;
+}
+void uPortSpiDeinit()
+{
+}
+int32_t uPortSpiOpen(int32_t spi, int32_t pinMosi, int32_t pinMiso,
+                     int32_t pinClk, bool controller)
+{
+    (void) spi;
+    (void) pinMosi;
+    (void) pinMiso;
+    (void) pinClk;
+    (void) controller;
+
+    return 0;
+}
+void uPortSpiClose(int32_t handle)
+{
+    (void) handle;
+}
+int32_t uPortSpiControllerSetDevice(int32_t handle,
+                                    const uCommonSpiControllerDevice_t *pDevice)
+{
+    (void) handle;
+    (void) pDevice;
+
+    return 0;
+}
+int32_t uPortSpiControllerGetDevice(int32_t handle,
+                                    uCommonSpiControllerDevice_t *pDevice)
+{
+    (void) handle;
+    (void) pDevice;
+
+    return 0;
+}
+uint64_t uPortSpiControllerSendReceiveWord(int32_t handle, uint64_t value,
+                                           size_t bytesToSendAndReceive)
+{
+    (void) handle;
+    (void) value;
+    (void) bytesToSendAndReceive;
+
+    return 0;
+}
+int32_t uPortSpiControllerSendReceiveBlock(int32_t handle, const char *pSend,
+                                           size_t bytesToSend, char *pReceive,
+                                           size_t bytesToReceive)
+{
+    (void) handle;
+    (void) pSend;
+    (void) bytesToSend;
+    (void) pReceive;
+    (void) bytesToReceive;
+
+    return 0;
+}
+
 // From u_port_crypto.h.
 int32_t uPortCryptoSha256(const char *pInput,
                           size_t inputLengthBytes,

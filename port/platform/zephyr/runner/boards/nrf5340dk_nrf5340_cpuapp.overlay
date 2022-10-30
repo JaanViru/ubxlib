@@ -12,3 +12,7 @@
     status = "okay";
     /* Otherwise board default settings are good. */
 };
+&uart2 {
+    /* Disable UART2 so that we can use SPI2 */
+    status = "disabled";
+};
