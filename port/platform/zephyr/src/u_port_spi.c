@@ -102,20 +102,42 @@ static int32_t setSpiConfig(uPortSpiCfg_t *pSpiCfg,
     if (pDevice->lsbFirst) {
         operation |= SPI_TRANSFER_LSB;
     }
-    // Note that SPI_CS_ACTIVE_HIGH is not fiddled with: this is one via
-    // the GPIO line configuration instead
+    // Note that SPI_CS_ACTIVE_HIGH is not fiddled with: this one is
+    // via the GPIO line configuration instead
     pSpiCfg->spiConfig.operation = operation;
     pSpiCfg->spiConfig.frequency = pDevice->frequencyHertz;
 
     pSpiCfg->spiConfig.cs = NULL;
+#if KERNEL_VERSION_MAJOR < 3
     pSpiCfg->spiCsControl.gpio_dev = NULL;
+#else
+    pSpiCfg->spiCsControl.gpio.port = NULL;
+#endif
     pSpiCfg->pinSelect = pDevice->pinSelect;
     if (pSpiCfg->pinSelect >= 0) {
         pinSelect = pSpiCfg->pinSelect & ~U_COMMON_SPI_PIN_SELECT_INVERTED;
         errorCode = (int32_t) U_ERROR_COMMON_INVALID_PARAMETER;
+#if KERNEL_VERSION_MAJOR < 3
         pSpiCfg->spiCsControl.gpio_dev = pUPortPrivateGetGpioDevice(pinSelect);
         if (pSpiCfg->spiCsControl.gpio_dev != NULL) {
             errorCode = (int32_t) U_ERROR_COMMON_SUCCESS;
+            pSpiCfg->spiCsControl.gpio_pin = pinSelect % GPIO_MAX_PINS_PER_PORT;
+            if (!pinSelectInverted) {
+                pSpiCfg->spiCsControl.gpio_dt_flags = GPIO_ACTIVE_LOW;
+            }
+            pSpiCfg->spiConfig.cs = &pSpiCfg->spiCsControl;
+        }
+#else
+        pSpiCfg->spiCsControl.gpio.port = pUPortPrivateGetGpioDevice(pinSelect);
+        if (pSpiCfg->spiCsControl.gpio.port != NULL) {
+            errorCode = (int32_t) U_ERROR_COMMON_SUCCESS;
+            pSpiCfg->spiCsControl.gpio.pin = pinSelect % GPIO_MAX_PINS_PER_PORT;
+            if (!pinSelectInverted) {
+                pSpiCfg->spiCsControl.gpio.dt_flags = GPIO_ACTIVE_LOW;
+            }
+        }
+#endif
+        if (errorCode == (int32_t) U_ERROR_COMMON_SUCCESS) {
             // Separate stop and start offsets are not supported, just a single
             // "delay" value that serves for both
             offsetDuration = pDevice->startOffsetNanoseconds;
@@ -123,10 +145,6 @@ static int32_t setSpiConfig(uPortSpiCfg_t *pSpiCfg,
                 offsetDuration = pDevice->stopOffsetNanoseconds;
             }
             pSpiCfg->spiCsControl.delay = offsetDuration / 1000;
-            pSpiCfg->spiCsControl.gpio_pin = pinSelect % GPIO_MAX_PINS_PER_PORT;
-            if (!pinSelectInverted) {
-                pSpiCfg->spiCsControl.gpio_dt_flags = GPIO_ACTIVE_LOW;
-            }
             pSpiCfg->spiConfig.cs = &pSpiCfg->spiCsControl;
         }
     }
@@ -299,15 +317,24 @@ int32_t uPortSpiControllerGetDevice(int32_t handle,
             pSpiCfg = &(gSpiCfg[handle]);
             pDevice->pinSelect = -1;
             pDevice->startOffsetNanoseconds = 0;
-            pDevice->stopOffsetNanoseconds = 0;
+#if KERNEL_VERSION_MAJOR < 3
             if (pSpiCfg->spiCsControl.gpio_dev != NULL) {
                 pDevice->pinSelect = pSpiCfg->pinSelect;
                 if ((pSpiCfg->spiCsControl.gpio_dt_flags & GPIO_ACTIVE_LOW) != GPIO_ACTIVE_LOW) {
                     pDevice->pinSelect |= U_COMMON_SPI_PIN_SELECT_INVERTED;
                 }
                 pDevice->startOffsetNanoseconds = pSpiCfg->spiCsControl.delay * 1000;
-                pDevice->stopOffsetNanoseconds = pDevice->startOffsetNanoseconds;
             }
+#else
+            if (pSpiCfg->spiCsControl.gpio.port != NULL) {
+                pDevice->pinSelect = pSpiCfg->pinSelect;
+                if ((pSpiCfg->spiCsControl.gpio.dt_flags & GPIO_ACTIVE_LOW) != GPIO_ACTIVE_LOW) {
+                    pDevice->pinSelect |= U_COMMON_SPI_PIN_SELECT_INVERTED;
+                }
+                pDevice->startOffsetNanoseconds = pSpiCfg->spiCsControl.delay * 1000;
+            }
+#endif
+            pDevice->stopOffsetNanoseconds = pDevice->startOffsetNanoseconds;
             pDevice->sampleDelayNanoseconds = 0; // Not an option in Zephyr
             pDevice->frequencyHertz = pSpiCfg->spiConfig.frequency;
             pDevice->mode = 0;
