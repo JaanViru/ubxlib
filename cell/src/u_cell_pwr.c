@@ -2433,7 +2433,7 @@ uCellPwr3gppPowerSavingState_t uCellPwrGet3gppPowerSavingState(uDeviceHandle_t c
             if (U_CELL_PRIVATE_HAS(pInstance->pModule,
                                    U_CELL_PRIVATE_FEATURE_3GPP_POWER_SAVING)) {
                 powerSavingState3gpp = U_CELL_PWR_3GPP_POWER_SAVING_STATE_AVAILABLE;
-                if (pInstance->pSleepContext) {
+                if (pInstance->pSleepContext != NULL) {
                     if (pInstance->pSleepContext->powerSaving3gppAgreed) {
                         powerSavingState3gpp = U_CELL_PWR_3GPP_POWER_SAVING_STATE_AGREED_BY_NETWORK;
                         if (pInstance->pSleepContext->powerSaving3gppOnNotOffCereg) {
@@ -2443,7 +2443,8 @@ uCellPwr3gppPowerSavingState_t uCellPwrGet3gppPowerSavingState(uDeviceHandle_t c
                                     *pApplication = pInstance->deepSleepBlockedBy;
                                 }
                             } else {
-                                if (pInstance->deepSleepState == U_CELL_PRIVATE_DEEP_SLEEP_STATE_PROTOCOL_STACK_ASLEEP) {
+                                if ((pInstance->deepSleepState == U_CELL_PRIVATE_DEEP_SLEEP_STATE_PROTOCOL_STACK_ASLEEP) ||
+                                    (pInstance->deepSleepState == U_CELL_PRIVATE_DEEP_SLEEP_STATE_ASLEEP)) {
                                     powerSavingState3gpp =  U_CELL_PWR_3GPP_POWER_SAVING_STATE_ACTIVE;
                                     if (uCellPrivateIsDeepSleepActive(pInstance)) {
                                         powerSavingState3gpp =  U_CELL_PWR_3GPP_POWER_SAVING_STATE_ACTIVE_DEEP_SLEEP_ACTIVE;
